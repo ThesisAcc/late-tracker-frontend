@@ -30,15 +30,20 @@
 
 .brand__mark {
   display: grid;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
   place-items: center;
+  overflow: hidden;
   border-radius: 10px;
-  color: #ffffff;
-  background: #163f4a;
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
+  background: var(--color-brand-plate);
+}
+
+.brand__mark img {
+  display: block;
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
 }
 
 .brand > span:last-child {
@@ -88,11 +93,11 @@
   height: 7px;
   flex: 0 0 auto;
   border-radius: 50%;
-  background: #c4861b;
+  background: var(--color-warning);
 }
 
 .source-badge__dot--upload {
-  background: #2d8172;
+  background: var(--color-brand);
 }
 
 .role-switch {
@@ -115,7 +120,7 @@
 }
 
 .role-switch button[aria-pressed="true"] {
-  color: #163f4a;
+  color: var(--color-brand-strong);
   background: #ffffff;
   box-shadow: 0 1px 3px rgba(18, 48, 61, 0.14);
 }
@@ -157,19 +162,19 @@
 .month-chart__hit:focus-visible,
 select:focus-visible,
 input:focus-visible {
-  outline: 3px solid rgba(23, 107, 109, 0.24);
+  outline: 2px solid var(--color-brand);
   outline-offset: 2px;
 }
 
 .button--primary {
   color: #ffffff;
-  background: #176b6d;
-  border-color: #176b6d;
+  background: var(--color-brand);
+  border-color: var(--color-brand);
 }
 
 .button--primary:not(:disabled):hover {
-  background: #12595b;
-  border-color: #12595b;
+  background: var(--color-brand-strong);
+  border-color: var(--color-brand-strong);
 }
 
 .button--secondary {
@@ -201,7 +206,7 @@ input:focus-visible {
 .text-button {
   min-height: 36px;
   padding: 5px 8px;
-  color: #176b6d;
+  color: var(--color-brand);
   background: transparent;
   font-size: 13px;
   text-decoration: underline;
@@ -250,13 +255,13 @@ input:focus-visible {
 }
 
 .data-notice--upload {
-  border-color: #cfe2dd;
-  background: #f1f8f6;
+  border-color: var(--color-brand-tint-strong);
+  background: #f1f8f3;
 }
 
 .data-notice--server {
-  border-color: #cfe2dd;
-  background: #f1f8f6;
+  border-color: var(--color-brand-tint-strong);
+  background: #f1f8f3;
 }
 
 .data-notice__label {
@@ -410,11 +415,11 @@ input:focus-visible {
 }
 
 .metric-card--danger::before {
-  background: #c14b45;
+  background: var(--color-danger);
 }
 
 .metric-card--warning::before {
-  background: #c4861b;
+  background: var(--color-warning);
 }
 
 .metric-card__label,
@@ -525,19 +530,19 @@ input:focus-visible {
 
 .month-chart__line {
   fill: none;
-  stroke: #2d8172;
+  stroke: var(--color-brand);
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 2.5;
 }
 
 .month-chart__area {
-  fill: rgba(45, 129, 114, 0.1);
+  fill: rgba(15, 110, 58, 0.1);
 }
 
 .month-chart__dot {
   fill: #ffffff;
-  stroke: #2d8172;
+  stroke: var(--color-brand);
   stroke-width: 1.75;
 }
 
@@ -548,7 +553,7 @@ input:focus-visible {
 }
 
 .month-chart__marker {
-  fill: #2d8172;
+  fill: var(--color-brand);
   stroke: #ffffff;
   stroke-width: 2;
 }
@@ -568,7 +573,7 @@ input:focus-visible {
 }
 
 .month-chart__axis-label--selected {
-  fill: #176b6d;
+  fill: var(--color-brand);
   font-weight: 800;
 }
 
@@ -581,11 +586,11 @@ input:focus-visible {
 }
 
 .month-chart__hit:hover {
-  background: rgba(45, 129, 114, 0.07);
+  background: rgba(15, 110, 58, 0.07);
 }
 
 .month-chart__hit--selected {
-  background: rgba(45, 129, 114, 0.09);
+  background: rgba(15, 110, 58, 0.09);
 }
 
 .month-chart__tooltip {
@@ -688,7 +693,7 @@ input:focus-visible {
 }
 
 .worker-table th button:hover {
-  color: #176b6d;
+  color: var(--color-brand);
 }
 
 .worker-table tbody tr:hover {
@@ -728,8 +733,8 @@ input:focus-visible {
   flex: 0 0 auto;
   place-items: center;
   border-radius: 9px;
-  color: #285b62;
-  background: #dfeeed;
+  color: var(--color-brand-strong);
+  background: var(--color-brand-tint);
   font-size: 11px;
   font-weight: 850;
 }
@@ -758,15 +763,15 @@ input:focus-visible {
 }
 
 .status-pill--late {
-  color: #8e2f2a;
-  border-color: #edc4c1;
-  background: #fff1f0;
+  color: var(--color-danger-strong);
+  border-color: var(--color-danger-tint-border);
+  background: var(--color-danger-tint);
 }
 
 .status-pill--clear {
-  color: #256554;
-  border-color: #bcded4;
-  background: #eef8f4;
+  color: var(--color-clear-strong);
+  border-color: var(--color-clear-tint-border);
+  background: var(--color-clear-tint);
 }
 
 .table-empty {
@@ -785,7 +790,7 @@ input:focus-visible {
   gap: 20px;
   border: 1px solid #d8e3e7;
   border-radius: 13px;
-  background: linear-gradient(120deg, #ffffff 0%, #f0f7f7 100%);
+  background: linear-gradient(120deg, #ffffff 0%, #f0f7f3 100%);
 }
 
 .worker-identity p:last-child {
@@ -813,8 +818,8 @@ input:focus-visible {
   margin-bottom: 17px;
   place-items: center;
   border-radius: 14px;
-  color: #176b6d;
-  background: #e1efef;
+  color: var(--color-brand);
+  background: var(--color-brand-tint);
   font-size: 20px;
   font-weight: 850;
 }
@@ -930,8 +935,8 @@ input:focus-visible {
 }
 
 .drop-zone--active {
-  border-color: #2d8172;
-  background: #eef7f6;
+  border-color: var(--color-brand);
+  background: #eef7f3;
 }
 
 .drop-zone__icon {
@@ -941,8 +946,8 @@ input:focus-visible {
   margin-bottom: 13px;
   place-items: center;
   border-radius: 12px;
-  color: #176b6d;
-  background: #dfeeed;
+  color: var(--color-brand);
+  background: var(--color-brand-tint);
   font-size: 11px;
   font-weight: 850;
 }
@@ -983,9 +988,9 @@ input:focus-visible {
 }
 
 .alert--error {
-  color: #842f2a;
-  border-color: #edc4c1;
-  background: #fff1f0;
+  color: var(--color-danger-strong);
+  border-color: var(--color-danger-tint-border);
+  background: var(--color-danger-tint);
 }
 
 .alert--warning {
@@ -993,9 +998,9 @@ input:focus-visible {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  color: #765312;
-  border-color: #e6d19c;
-  background: #fff8e8;
+  color: var(--color-warning-strong);
+  border-color: var(--color-warning-tint-border);
+  background: var(--color-warning-tint);
 }
 
 .preview-panel {
@@ -1034,9 +1039,9 @@ input:focus-visible {
 .issue-block {
   margin-top: 12px;
   padding: 12px;
-  border-left: 3px solid #c4861b;
+  border-left: 3px solid var(--color-warning);
   color: #6c531e;
-  background: #fff8e8;
+  background: var(--color-warning-tint);
 }
 
 .issue-block h3 {

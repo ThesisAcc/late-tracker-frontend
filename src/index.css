@@ -9,6 +9,30 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color-scheme: light;
+
+  /* Brand — Paschal green-deep. 6.34:1 on white, contrast-neutral vs the old teal. */
+  --color-brand: #0f6e3a;
+  --color-brand-strong: #0b5630;
+  --color-brand-tint: #e8f2ec;
+  --color-brand-tint-strong: #cfe0d5;
+  --color-brand-plate: #0b2e1c;
+
+  /* Danger — 4.54:1 on white. Replaces #c4405a at 3.26:1. */
+  --color-danger: #c94a5e;
+  --color-danger-strong: #8e2f3f;
+  --color-danger-tint: #fdf1f3;
+  --color-danger-tint-border: #eac4cc;
+
+  /* Warning — darker than the theme's #c77d2a so small text passes AA. */
+  --color-warning: #b3701f;
+  --color-warning-strong: #765312;
+  --color-warning-tint: #fff8e8;
+  --color-warning-tint-border: #e6d19c;
+
+  /* Clear / no lateness — neutral grey, not green. */
+  --color-clear-strong: #4a5560;
+  --color-clear-tint: #f5f7f8;
+  --color-clear-tint-border: #d5dde2;
 }
 
 * {
@@ -55,5 +79,5 @@ button:disabled {
 
 ::selection {
   color: #ffffff;
-  background: #176b6d;
+  background: var(--color-brand);
 }
