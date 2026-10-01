@@ -1,4 +1,5 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { clearAuthToken, setAuthToken } from './auth'
 import { getActiveRepository, type ImportSelection } from './dataSource'
 import { createLocalStorageRepository } from './localStorageRepository'
 import { STORAGE_KEY } from './storage'
@@ -35,8 +36,23 @@ afterEach(() => {
 })
 
 describe('getActiveRepository', () => {
+  beforeEach(() => {
+    clearAuthToken()
+  })
+
   it('returns the same repository instance on every call', () => {
     expect(getActiveRepository()).toBe(getActiveRepository())
+  })
+
+  it('switches to server repository when auth token is set', () => {
+    const localRepo = getActiveRepository()
+    setAuthToken('my-token')
+    const serverRepo = getActiveRepository()
+    expect(serverRepo).not.toBe(localRepo)
+    expect(getActiveRepository()).toBe(serverRepo)
+
+    clearAuthToken()
+    expect(getActiveRepository()).toBe(localRepo)
   })
 })
 

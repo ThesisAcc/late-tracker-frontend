@@ -1,6 +1,6 @@
 # LateTrack
 
-Browser-only frontend for tracking worker lateness. Managers import an Excel workbook of monthly late-minute totals, review team performance, and switch to a read-only worker view. Data never leaves the browser.
+Frontend for tracking worker lateness. Users sign in with their full name and PIN, then managers can import an Excel workbook of monthly late-minute totals, review team performance, and switch to a read-only worker view.
 
 The backend is still under development. The app runs entirely in the browser until the API exists.
 
@@ -16,7 +16,18 @@ The backend is still under development. The app runs entirely in the browser unt
 - `Demo data` badge in the header while sample records are shown
 - Responsive layout, keyboard navigation, and reduced-motion support
 
-No backend, no account, no network requests at runtime.
+The frontend expects an authentication and attendance API at `VITE_API_URL` (default `http://localhost:3000`). Without a stored login token, it displays the login form and posts credentials to `/api/auth/login`.
+
+The login request body is:
+
+```json
+{
+  "fullName": "john mark almiro",
+  "pin": "1234"
+}
+```
+
+Successful responses must contain `token` and `user`. The token is stored in browser local storage and sent in a bearer authorization header for authenticated attendance requests. HTTP 401 responses are shown as invalid credentials and HTTP 429 responses are shown as `Too many login attempts`.
 
 ## Demo mode
 

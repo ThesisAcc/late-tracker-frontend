@@ -1,19 +1,27 @@
 import { useEffect, useRef, useState } from 'react'
 import { getWorkerPeriodTotal } from '../../lib/calculations'
 import {
-  downloadWorkbookTemplate,
-  parseWorkbookFile,
-} from '../../lib/excel'
+  ApiError,
+  apiWorkerToWorker,
+  downloadTemplate,
+  previewImport,
+  type ImportIssueApi,
+} from '../../lib/importsApi'
 import { createSampleWorkbookPreview } from '../../lib/sampleWorkbook'
 import type { ImportIssue, SheetPreview, WorkbookPreview } from '../../lib/types'
 
 interface ImportDialogProps {
   onClose: () => void
+  /** year to attach to the import — caller typically shows a year picker */
+  year?: number
   onImport: (selection: {
     workers: SheetPreview['workers']
     fileName: string
     sheetName: string
-  }) => void
+    /** raw File for the server repository to re-upload */
+    file?: File
+    year?: number
+  }) => void | Promise<void>
 }
 
 function IssueList({
@@ -42,17 +50,19 @@ function IssueList({
   )
 }
 
-export function ImportDialog({ onClose, onImport }: ImportDialogProps) {
+export function ImportDialog({ onClose, onImport, year: initialYear }: ImportDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const closeButtonRef = useRef<HTMLButtonElement>(null)
   const triggerRef = useRef<HTMLElement | null>(null)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [year, setYear] = useState(initialYear ?? new Date().getFullYear())
   const [preview, setPreview] = useState<WorkbookPreview | null>(null)
   const [previewOrigin, setPreviewOrigin] = useState<'file' | 'sample'>('file')
   const [selectedSheetName, setSelectedSheetName] = useState('')
   const [isDragging, setIsDragging] = useState(false)
   const [isParsing, setIsParsing] = useState(false)
-  const [isDownloading, setIsDownloading] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -92,23 +102,165 @@ export function ImportDialog({ onClose, onImport }: ImportDialogProps) {
     setPreview(null)
     setSelectedSheetName('')
     setIsParsing(true)
+    setSelectedFile(file)
 
     try {
-      applyPreview(await parseWorkbookFile(file), 'file')
-    } catch (caughtError) {
+      const data = await previewImport(file, year)
+
+      const toIssue = (i: ImportIssueApi) => ({
+        row: i.rowNumber,
+        column: i.column,
+        message: i.message,
+      })
+
+      const availableSheets =
+        data.availableSheets && data.availableSheets.length > 0
+          ? data.availableSheets
+          : [data.sheetName]
+
+      const sheets: SheetPreview[] = availableSheets.map((name) => {
+        if (name === data.sheetName) {
+          return {
+            name: data.sheetName,
+            workers: data.workers.map(apiWorkerToWorker) as SheetPreview['workers'],
+            errors: data.issues.filter((i) => i.severity === 'ERROR').map(toIssue),
+            warnings: data.issues.filter((i) => i.severity === 'WARNING').map(toIssue),
+          }
+        }
+        return {
+          name,
+          workers: [],
+          errors: [],
+          warnings: [],
+        }
+      })
+
+      applyPreview({ fileName: data.fileName, sheets }, 'file')
+    } catch (caughtError: unknown) {
+      if (caughtError instanceof ApiError && caughtError.details?.errors) {
+        const toIssue = (i: NonNullable<ApiError['details']>['errors'] extends (infer T)[] | undefined ? T : never) => ({
+          row: i.row ?? i.rowNumber ?? null,
+          column: i.column ?? '',
+          message: i.message ?? '',
+        })
+        const sheets: SheetPreview[] = [
+          {
+            name: 'Sheet1',
+            workers: [],
+            errors: caughtError.details.errors.map(toIssue),
+            warnings: [],
+          },
+        ]
+        applyPreview({ fileName: file.name, sheets }, 'file')
+      }
       setError(
         caughtError instanceof Error
           ? caughtError.message
-          : 'Workbook could not be read.',
+          : 'Could not reach the server.',
       )
     } finally {
       setIsParsing(false)
     }
   }
 
+  async function handleSheetChange(nextSheetName: string) {
+    setSelectedSheetName(nextSheetName)
+    if (!selectedFile || previewOrigin !== 'file') return
+
+    const sheet = preview?.sheets.find((s) => s.name === nextSheetName)
+    if (sheet && (sheet.workers.length > 0 || sheet.errors.length > 0)) {
+      return
+    }
+
+    setIsParsing(true)
+    try {
+      const data = await previewImport(selectedFile, year, nextSheetName)
+      const toIssue = (i: ImportIssueApi) => ({
+        row: i.rowNumber,
+        column: i.column,
+        message: i.message,
+      })
+
+      setPreview((prev) => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          sheets: prev.sheets.map((s) =>
+            s.name === nextSheetName
+              ? {
+                  name: data.sheetName,
+                  workers: data.workers.map(apiWorkerToWorker) as SheetPreview['workers'],
+                  errors: data.issues.filter((i) => i.severity === 'ERROR').map(toIssue),
+                  warnings: data.issues.filter((i) => i.severity === 'WARNING').map(toIssue),
+                }
+              : s,
+          ),
+        }
+      })
+    } catch (caughtError) {
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : 'Could not reach the server.',
+      )
+    } finally {
+      setIsParsing(false)
+    }
+  }
+
+  async function handleYearChange(newYear: number) {
+    setYear(newYear)
+    if (selectedFile && previewOrigin === 'file') {
+      setIsParsing(true)
+      try {
+        const data = await previewImport(
+          selectedFile,
+          newYear,
+          selectedSheetName || undefined,
+        )
+        const toIssue = (i: ImportIssueApi) => ({
+          row: i.rowNumber,
+          column: i.column,
+          message: i.message,
+        })
+        const availableSheets =
+          data.availableSheets && data.availableSheets.length > 0
+            ? data.availableSheets
+            : [data.sheetName]
+
+        const sheets: SheetPreview[] = availableSheets.map((name) => {
+          if (name === data.sheetName) {
+            return {
+              name: data.sheetName,
+              workers: data.workers.map(apiWorkerToWorker) as SheetPreview['workers'],
+              errors: data.issues.filter((i) => i.severity === 'ERROR').map(toIssue),
+              warnings: data.issues.filter((i) => i.severity === 'WARNING').map(toIssue),
+            }
+          }
+          return {
+            name,
+            workers: [],
+            errors: [],
+            warnings: [],
+          }
+        })
+        applyPreview({ fileName: data.fileName, sheets }, 'file')
+      } catch (caughtError) {
+        setError(
+          caughtError instanceof Error
+            ? caughtError.message
+            : 'Could not reach the server.',
+        )
+      } finally {
+        setIsParsing(false)
+      }
+    }
+  }
+
   async function handleSampleWorkbook() {
     setError(null)
     setIsParsing(true)
+    setSelectedFile(null)
 
     try {
       applyPreview(await createSampleWorkbookPreview(), 'sample')
@@ -117,30 +269,38 @@ export function ImportDialog({ onClose, onImport }: ImportDialogProps) {
     }
   }
 
-  async function handleDownload() {
-    setError(null)
-    setIsDownloading(true)
-
-    try {
-      await downloadWorkbookTemplate()
-    } catch {
-      setError('Template could not be created. Please try again.')
-    } finally {
-      setIsDownloading(false)
-    }
+  function handleDownload() {
+    downloadTemplate()
   }
 
-  function handleConfirm() {
+  async function handleConfirm() {
     if (!preview || !selectedSheet || !canImport) {
       return
     }
 
-    onImport({
-      workers: selectedSheet.workers,
-      fileName: preview.fileName,
-      sheetName: selectedSheet.name,
-    })
+    try {
+      setIsSubmitting(true)
+      await onImport({
+        workers: selectedSheet.workers,
+        fileName: preview.fileName,
+        sheetName: selectedSheet.name,
+        file: selectedFile ?? undefined,
+        year,
+      })
+    } catch (caughtError) {
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : 'Failed to import dataset.',
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
   }
+
+  const yearOptions = Array.from(
+    new Set([2024, 2025, 2026, 2027, year]),
+  ).sort((a, b) => a - b)
 
   return (
     <dialog
@@ -163,8 +323,7 @@ export function ImportDialog({ onClose, onImport }: ImportDialogProps) {
             <p className="eyebrow">Data import</p>
             <h2 id="import-title">Import worker totals</h2>
             <p>
-              Upload a .xlsx workbook, or preview a sample while the backend is
-              still being built.
+              Upload a .xlsx workbook to sync worker attendance with the server.
             </p>
           </div>
           <button
@@ -194,12 +353,27 @@ export function ImportDialog({ onClose, onImport }: ImportDialogProps) {
             <button
               type="button"
               className="button button--secondary"
-              disabled={isDownloading}
               onClick={handleDownload}
             >
-              {isDownloading ? 'Creating…' : 'Download template'}
+              Download template
             </button>
           </div>
+        </div>
+
+        <div style={{ marginBottom: '14px' }}>
+          <label className="field field--compact">
+            <span>Target year</span>
+            <select
+              value={year}
+              onChange={(e) => void handleYearChange(Number(e.target.value))}
+            >
+              {yearOptions.map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
 
         <div
@@ -226,7 +400,7 @@ export function ImportDialog({ onClose, onImport }: ImportDialogProps) {
             XLS
           </span>
           <h3>Drop an .xlsx workbook here</h3>
-          <p>Maximum file size: 5 MB. Data stays in this browser.</p>
+          <p>Maximum file size: 5 MB (.xlsx)</p>
           <input
             ref={inputRef}
             id="workbook-upload"
@@ -270,7 +444,7 @@ export function ImportDialog({ onClose, onImport }: ImportDialogProps) {
                     <select
                       value={selectedSheetName}
                       onChange={(event) =>
-                        setSelectedSheetName(event.target.value)
+                        void handleSheetChange(event.target.value)
                       }
                     >
                       {preview.sheets.map((sheet) => (
@@ -323,10 +497,10 @@ export function ImportDialog({ onClose, onImport }: ImportDialogProps) {
             <button
               type="button"
               className="button button--primary"
-              disabled={!canImport || isParsing}
-              onClick={handleConfirm}
+              disabled={!canImport || isParsing || isSubmitting}
+              onClick={() => void handleConfirm()}
             >
-              Replace dataset
+              {isSubmitting ? 'Importing…' : 'Replace dataset'}
             </button>
           </div>
         </div>

@@ -2,6 +2,66 @@
   min-height: 100vh;
 }
 
+.login-page {
+  display: grid;
+  min-height: 100vh;
+  padding: 24px;
+  place-items: center;
+}
+
+.login-card {
+  width: min(100%, 430px);
+  padding: 36px;
+  border: 1px solid #d9e2e7;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 18px 45px rgba(23, 43, 58, 0.1);
+}
+
+.login-card__brand {
+  margin-bottom: 28px;
+}
+
+.login-card h1 {
+  margin: 0;
+  color: #172b3a;
+  font-size: 28px;
+  letter-spacing: -0.03em;
+}
+
+.login-card__intro {
+  margin: 8px 0 24px;
+  color: #5b6d78;
+}
+
+.login-card__error {
+  margin-bottom: 18px;
+}
+
+.login-field {
+  display: grid;
+  gap: 7px;
+  margin-top: 16px;
+  color: #304956;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.login-field input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #cbd8de;
+  border-radius: 9px;
+  color: #172b3a;
+  background: #ffffff;
+}
+
+.login-card__submit {
+  width: 100%;
+  margin-top: 24px;
+}
+
 .app-header {
   position: sticky;
   z-index: 20;

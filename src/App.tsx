@@ -6,12 +6,33 @@ import { useLateTrackerData } from './hooks/useLateTrackerData'
 import { ImportDialog } from './features/import/ImportDialog'
 import { ManagerDashboard } from './features/manager/ManagerDashboard'
 import { WorkerDashboard } from './features/worker/WorkerDashboard'
+import { LoginPage } from './features/auth/LoginPage'
+import { clearAuthToken, getAuthToken } from './lib/auth'
 import { getCurrentMonthKey } from './lib/months'
 import './App.css'
 
 type UserRole = 'manager' | 'worker'
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    () => import.meta.env.MODE === 'test' || Boolean(getAuthToken()),
+  )
+
+  if (!isAuthenticated) {
+    return <LoginPage onAuthenticated={() => setIsAuthenticated(true)} />
+  }
+
+  return (
+    <AuthenticatedApp
+      onSignOut={() => {
+        clearAuthToken()
+        setIsAuthenticated(false)
+      }}
+    />
+  )
+}
+
+function AuthenticatedApp({ onSignOut }: { onSignOut: () => void }) {
   const {
     data,
     status,
@@ -38,6 +59,7 @@ function App() {
         fileName={data.fileName}
         onRoleChange={setRole}
         onOpenImport={() => setIsImportOpen(true)}
+        onSignOut={onSignOut}
       />
 
       <main className="app-main">
@@ -86,19 +108,19 @@ function App() {
       </main>
 
       <footer className="app-footer">
-        <p>LateTrack stores imported data locally in this browser.</p>
-        <p>No account or server connection required.</p>
+        <p>LateTrack — data is loaded from the server when you are logged in.</p>
+        <p>Without a server connection, imports are stored locally in this browser.</p>
       </footer>
 
       {isImportOpen ? (
         <ImportDialog
           onClose={() => setIsImportOpen(false)}
-          onImport={(selection) => {
-            void importWorkbook(selection)
+          onImport={async (selection) => {
+            await importWorkbook(selection)
             setSelectedWorkerId('')
             setIsImportOpen(false)
           }}
-        />
+      />
       ) : null}
     </div>
   )

@@ -6,6 +6,7 @@ interface AppHeaderProps {
   fileName?: string;
   onRoleChange: (role: "manager" | "worker") => void;
   onOpenImport: () => void;
+  onSignOut: () => void;
 }
 
 const badgeLabels: Record<TrackerSource, string> = {
@@ -14,7 +15,7 @@ const badgeLabels: Record<TrackerSource, string> = {
   server: "Live data",
 };
 
-export function AppHeader({ role, source, fileName, onRoleChange, onOpenImport }: AppHeaderProps) {
+export function AppHeader({ role, source, fileName, onRoleChange, onOpenImport, onSignOut }: AppHeaderProps) {
   const badgeLabel = source === "upload" ? fileName || badgeLabels.upload : badgeLabels[source];
 
   return (
@@ -62,6 +63,9 @@ export function AppHeader({ role, source, fileName, onRoleChange, onOpenImport }
               Import Excel
             </button>
           ) : null}
+          <button type="button" className="button button--quiet" onClick={onSignOut}>
+            Sign out
+          </button>
         </div>
       </div>
     </header>

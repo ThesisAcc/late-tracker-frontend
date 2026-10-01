@@ -1,10 +1,14 @@
+import { getAuthToken } from './auth'
 import { createLocalStorageRepository } from './localStorageRepository'
+import { createServerRepository } from './serverRepository'
 import type { TrackerData, Worker } from './types'
 
 export interface ImportSelection {
   workers: Worker[]
   fileName: string
   sheetName: string
+  file?: File
+  year?: number
 }
 
 export interface RepositoryOutcome {
@@ -19,9 +23,10 @@ export interface AttendanceRepository {
 }
 
 const localRepository = createLocalStorageRepository()
+const serverRepository = createServerRepository()
 
 export function getActiveRepository(): AttendanceRepository {
-  return localRepository
+  return getAuthToken() ? serverRepository : localRepository
 }
 
 export const SAVE_WARNING =
