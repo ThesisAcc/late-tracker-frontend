@@ -39,8 +39,8 @@ export function LoginPage({ onAuthenticated }: LoginPageProps) {
     <main className="login-page">
       <section className="login-card" aria-labelledby="login-title">
         <div className="brand login-card__brand" aria-label="LateTrack">
-          <span className="brand__mark" aria-hidden="true">
-            <img src="/Logo.png" alt="" />
+          <span aria-hidden="true">
+            <img className="brand__mark" src="/Logo.png" alt="" />
           </span>
           <span>
             <strong>LateTrack</strong>

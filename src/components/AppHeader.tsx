@@ -1,11 +1,10 @@
+import { Link } from 'react-router-dom'
 import type { TrackerSource } from "../lib/types";
 
 interface AppHeaderProps {
-  role: "manager" | "worker";
   source: TrackerSource;
   fileName?: string;
-  onRoleChange: (role: "manager" | "worker") => void;
-  onOpenImport: () => void;
+  onOpenImport?: () => void;
   onSignOut: () => void;
 }
 
@@ -15,16 +14,14 @@ const badgeLabels: Record<TrackerSource, string> = {
   server: "Live data",
 };
 
-export function AppHeader({ role, source, fileName, onRoleChange, onOpenImport, onSignOut }: AppHeaderProps) {
+export function AppHeader({ source, fileName, onOpenImport, onSignOut }: AppHeaderProps) {
   const badgeLabel = source === "upload" ? fileName || badgeLabels.upload : badgeLabels[source];
 
   return (
     <header className="app-header">
       <div className="app-header__inner">
         <div className="brand" aria-label="LateTrack home">
-          <span className="brand__mark" aria-hidden="true">
-            <img src="/Logo.png" alt="" />
-          </span>
+          <img className="brand__mark" src="/Logo.png" alt="" />
           <span>
             <strong>LateTrack</strong>
             <small>Workforce attendance</small>
@@ -37,24 +34,16 @@ export function AppHeader({ role, source, fileName, onRoleChange, onOpenImport, 
             {badgeLabel}
           </span>
 
-          <div className="role-switch" aria-label="View as role">
-            <button
-              type="button"
-              aria-pressed={role === "manager"}
-              onClick={() => onRoleChange("manager")}
-            >
-              Manager
-            </button>
-            <button
-              type="button"
-              aria-pressed={role === "worker"}
-              onClick={() => onRoleChange("worker")}
-            >
-              Worker
-            </button>
-          </div>
+          <nav className="heading-controls">
+            <Link to="/manager" className="text-button">
+              Manager view
+            </Link>
+            <Link to="/worker" className="text-button">
+              Worker view
+            </Link>
+          </nav>
 
-          {role === "manager" ? (
+          {source !== 'demo' && onOpenImport ? (
             <button
               type="button"
               className="button button--primary header-import"

@@ -1,15 +1,29 @@
 export const AUTH_TOKEN_KEY = 'latetrack-auth-token'
 export const AUTH_USER_KEY = 'latetrack-auth-user'
 
+export type UserRole = 'ADMIN' | 'EMPLOYEE'
+
 export interface AuthenticatedUser {
   id: string
-  role: string
+  role: UserRole
   employee: {
     id: string
     employeeCode: string
     firstName: string
     lastName: string
   }
+}
+
+export function isAdmin(user: AuthenticatedUser | null): boolean {
+  return user?.role === 'ADMIN'
+}
+
+export function isEmployee(user: AuthenticatedUser | null): boolean {
+  return user?.role === 'EMPLOYEE'
+}
+
+export function getUserRole(user: AuthenticatedUser | null): UserRole | null {
+  return user?.role ?? null
 }
 
 export function getAuthToken(): string | null {
