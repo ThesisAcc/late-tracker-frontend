@@ -89,13 +89,13 @@ export function createServerRepository(): AttendanceRepository {
     async load(): Promise<TrackerData> {
       const user = getAuthUser()
       
-      // If user is an employee (not admin/manager), fetch their personal dashboard
-      if (user && user.role !== 'admin' && user.role !== 'manager') {
+      // If user is an employee (not admin), fetch their personal dashboard
+      if (user && user.role !== 'ADMIN') {
         const dashboard = await fetchMyDashboard()
         return employeeDashboardToTrackerData(dashboard)
       }
 
-      // For managers/admins, fetch the full admin dashboard
+      // For admins, fetch the full admin dashboard
       const year = new Date().getFullYear()
       const res = await fetch(`${API_BASE}/api/admin/dashboard?year=${year}`, {
         headers: getAuthHeaders(),

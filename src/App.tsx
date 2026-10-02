@@ -1,4 +1,11 @@
 import { useState } from 'react'
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  useNavigate,
+  Navigate,
+} from 'react-router-dom'
 import { AppHeader } from './components/AppHeader'
 import { DataSourceNotice } from './components/DataSourceNotice'
 import { LoadingState } from './components/LoadingState'
@@ -7,32 +14,24 @@ import { ImportDialog } from './features/import/ImportDialog'
 import { ManagerDashboard } from './features/manager/ManagerDashboard'
 import { WorkerDashboard } from './features/worker/WorkerDashboard'
 import { LoginPage } from './features/auth/LoginPage'
-import { clearAuth, getAuthToken, getAuthUser } from './lib/auth'
+import { clearAuth } from './lib/auth'
 import { getCurrentMonthKey } from './lib/months'
+import { useAuth } from './hooks/useAuth'
+import { RequireRole } from './components/RequireRole'
 import './App.css'
 
-type UserRole = 'manager' | 'worker'
-
-function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(
-    () => import.meta.env.MODE === 'test' || Boolean(getAuthToken()),
-  )
+function AuthenticatedApp() {
+  const { isAuthenticated, isAdmin } = useAuth()
+  const navigate = useNavigate()
 
   if (!isAuthenticated) {
-    return <LoginPage onAuthenticated={() => setIsAuthenticated(true)} />
+    return <LoginPage onAuthenticated={handleLoginSuccess} />
   }
 
-  return (
-    <AuthenticatedApp
-      onSignOut={() => {
-        clearAuth()
-        setIsAuthenticated(false)
-      }}
-    />
-  )
-}
+  function handleLoginSuccess() {
+    navigate(isAdmin ? '/manager' : '/worker', { replace: true })
+  }
 
-function AuthenticatedApp({ onSignOut }: { onSignOut: () => void }) {
   const {
     data,
     status,
@@ -41,33 +40,21 @@ function AuthenticatedApp({ onSignOut }: { onSignOut: () => void }) {
     restoreDemo,
     clearSaveWarning,
   } = useLateTrackerData()
-  const user = getAuthUser()
-  const isManager = user?.role === 'admin' || user?.role === 'manager'
-  // Default to manager in demo/test mode (no user), otherwise use role from user
-  const defaultRole: UserRole = user ? (isManager ? 'manager' : 'worker') : 'manager'
-  const [role, setRole] = useState<UserRole>(defaultRole)
+
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthKey)
-  const [selectedWorkerId, setSelectedWorkerId] = useState('')
   const [isImportOpen, setIsImportOpen] = useState(false)
   const isLoading = status === 'loading'
-  
-  // For authenticated employees, we get only their data (single worker)
-  // For demo/test mode, we have multiple workers
-  const isAuthenticatedEmployee = user && !isManager && data.source === 'server'
-  const activeWorkerId =
-    data.workers.some((worker) => worker.id === selectedWorkerId)
-      ? selectedWorkerId
-      : (data.workers[0]?.id ?? '')
 
   return (
     <div className="app-shell">
       <AppHeader
-        role={role}
         source={data.source}
         fileName={data.fileName}
-        onRoleChange={setRole}
-        onOpenImport={() => setIsImportOpen(true)}
-        onSignOut={onSignOut}
+        onOpenImport={isAdmin ? () => setIsImportOpen(true) : undefined}
+        onSignOut={() => {
+          clearAuth()
+          navigate('/login', { replace: true })
+        }}
       />
 
       <main className="app-main">
@@ -89,7 +76,7 @@ function AuthenticatedApp({ onSignOut }: { onSignOut: () => void }) {
             source={data.source}
             fileName={data.fileName}
             sheetName={data.sheetName}
-            showActions={role === 'manager'}
+            showActions={true}
             onOpenImport={() => setIsImportOpen(true)}
             onRestoreDemo={restoreDemo}
           />
@@ -97,21 +84,46 @@ function AuthenticatedApp({ onSignOut }: { onSignOut: () => void }) {
 
         {isLoading ? (
           <LoadingState label="Loading attendance records" />
-        ) : role === 'manager' ? (
-          <ManagerDashboard
-            workers={data.workers}
-            selectedMonth={selectedMonth}
-            onMonthChange={setSelectedMonth}
-            onOpenImport={() => setIsImportOpen(true)}
-          />
         ) : (
-          <WorkerDashboard
-            workers={data.workers}
-            selectedWorkerId={isAuthenticatedEmployee ? undefined : activeWorkerId}
-            selectedMonth={selectedMonth}
-            onWorkerChange={isAuthenticatedEmployee ? undefined : setSelectedWorkerId}
-            onMonthChange={setSelectedMonth}
-          />
+          <Routes>
+            <Route
+              path="/manager"
+              element={
+                <RequireRole allowedRoles={['ADMIN']}>
+                  <ManagerDashboard
+                    workers={data.workers}
+                    selectedMonth={selectedMonth}
+                    onMonthChange={setSelectedMonth}
+                    onOpenImport={() => setIsImportOpen(true)}
+                  />
+                </RequireRole>
+              }
+            />
+            <Route
+              path="/worker"
+              element={
+                <RequireRole allowedRoles={['EMPLOYEE']}>
+                  <WorkerDashboard
+                    selectedMonth={selectedMonth}
+                    onMonthChange={setSelectedMonth}
+                  />
+                </RequireRole>
+              }
+            />
+            <Route
+              path="/"
+              element={
+                <Navigate
+                  to={isAdmin ? '/manager' : '/worker'}
+                  replace
+                />
+              }
+            />
+            <Route
+              path="/login"
+              element={<Navigate to={isAdmin ? '/manager' : '/worker'} replace />}
+            />
+          </Routes>
         )}
       </main>
 
@@ -120,17 +132,24 @@ function AuthenticatedApp({ onSignOut }: { onSignOut: () => void }) {
         <p>Without a server connection, imports are stored locally in this browser.</p>
       </footer>
 
-      {isImportOpen ? (
+      {isImportOpen && isAdmin ? (
         <ImportDialog
           onClose={() => setIsImportOpen(false)}
           onImport={async (selection) => {
             await importWorkbook(selection)
-            setSelectedWorkerId('')
             setIsImportOpen(false)
           }}
-      />
+        />
       ) : null}
     </div>
+  )
+}
+
+function App() {
+  return (
+    <Router>
+      <AuthenticatedApp />
+    </Router>
   )
 }
 

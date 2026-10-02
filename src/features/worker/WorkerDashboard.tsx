@@ -1,57 +1,120 @@
+import { useEffect, useState } from 'react'
 import { EmptyState } from '../../components/EmptyState'
 import { MetricCard } from '../../components/MetricCard'
 import { MonthlyBreakdown } from '../../components/MonthlyBreakdown'
 import { getWorkerPeriodTotal } from '../../lib/calculations'
 import { getMonthDefinition, MONTHS, type MonthKey } from '../../lib/months'
-import type { Worker } from '../../lib/types'
+import type { Worker, MonthlyMinutes } from '../../lib/types'
+import { fetchMyDashboard, type EmployeeDashboardResponse } from '../../lib/dashboardApi'
 
 interface WorkerDashboardProps {
-  workers: Worker[]
-  selectedWorkerId?: string
   selectedMonth: MonthKey
-  onWorkerChange?: (workerId: string) => void
   onMonthChange: (month: MonthKey) => void
 }
 
 const numberFormatter = new Intl.NumberFormat('en-US')
 
+function dashboardResponseToWorker(dashboard: EmployeeDashboardResponse): Worker {
+  const monthlyMinutes: MonthlyMinutes = {} as MonthlyMinutes
+  for (const m of MONTHS) {
+    monthlyMinutes[m.key] = 0
+  }
+
+  for (const item of dashboard.monthlyBreakdown) {
+    if (item.month >= 1 && item.month <= 12) {
+      const monthKey = MONTHS[item.month - 1]?.key
+      if (monthKey) {
+        monthlyMinutes[monthKey] = item.minutesLate
+      }
+    }
+  }
+
+  return {
+    id: dashboard.employee.employeeCode,
+    firstName: dashboard.employee.firstName,
+    middleName: dashboard.employee.middleName ?? '',
+    lastName: dashboard.employee.lastName,
+    monthlyMinutes,
+  }
+}
+
 export function WorkerDashboard({
-  workers,
-  selectedWorkerId,
   selectedMonth,
-  onWorkerChange,
   onMonthChange,
 }: WorkerDashboardProps) {
-  // Handle empty workers case
-  if (workers.length === 0) {
+  const [worker, setWorker] = useState<Worker | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadDashboard() {
+      try {
+        setIsLoading(true)
+        setError(null)
+        const dashboard = await fetchMyDashboard()
+        if (!cancelled) {
+          setWorker(dashboardResponseToWorker(dashboard))
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Failed to load dashboard')
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    loadDashboard()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  if (isLoading) {
     return (
       <div className="dashboard-stack">
         <section className="page-heading" aria-labelledby="worker-title">
           <div>
             <p className="eyebrow">Worker view</p>
             <h1 id="worker-title">My late records</h1>
-            <p>Records stay read-only and appear after a manager imports a workbook.</p>
+          </div>
+        </section>
+        <div className="loading-state" role="status" aria-busy="true">
+          <span className="loading-spinner" aria-hidden="true" />
+          <p>Loading your records...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !worker) {
+    return (
+      <div className="dashboard-stack">
+        <section className="page-heading" aria-labelledby="worker-title">
+          <div>
+            <p className="eyebrow">Worker view</p>
+            <h1 id="worker-title">My late records</h1>
           </div>
         </section>
         <EmptyState
-          title="No worker records yet"
-          message="A manager needs to import an Excel workbook before worker records become available."
+          title="Unable to load records"
+          message={error || 'Your attendance records could not be loaded.'}
         />
       </div>
     )
   }
 
-  const worker =
-    workers.find((item) => item.id === selectedWorkerId) ?? workers[0]
   const month = getMonthDefinition(selectedMonth)
   const monthTotal = worker.monthlyMinutes[selectedMonth]
   const periodTotal = getWorkerPeriodTotal(worker)
   const monthsWithLateness = MONTHS.filter(
     (item) => worker.monthlyMinutes[item.key] > 0,
   ).length
-  
-  // Show worker dropdown only if there are multiple workers and a change handler is provided
-  const showWorkerDropdown = workers.length > 1 && onWorkerChange
 
   return (
     <div className="dashboard-stack">
@@ -59,24 +122,9 @@ export function WorkerDashboard({
         <div>
           <p className="eyebrow">Worker view</p>
           <h1 id="worker-title">My late records</h1>
-          <p>Review {showWorkerDropdown ? 'monthly totals imported by a manager' : 'your monthly totals'}. Records are read-only.</p>
+          <p>Your monthly totals imported by a manager. Records are read-only.</p>
         </div>
         <div className="heading-controls">
-          {showWorkerDropdown ? (
-            <label className="field field--compact">
-              <span>Worker</span>
-              <select
-                value={worker.id}
-                onChange={(event) => onWorkerChange(event.target.value)}
-              >
-                {workers.map((item) => (
-                  <option value={item.id} key={item.id}>
-                    {item.lastName}, {item.firstName}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : null}
           <label className="field field--compact">
             <span>Reporting month</span>
             <select

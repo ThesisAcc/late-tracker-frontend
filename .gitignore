@@ -26,3 +26,9 @@ dist-ssr
 
 # environment variables
 .env
+
+# Dev bypass (local testing only)
+src/devBypass.ts
+
+# Local docs
+HOWTORUN.md
