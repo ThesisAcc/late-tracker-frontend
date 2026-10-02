@@ -7,7 +7,7 @@ import { ImportDialog } from './features/import/ImportDialog'
 import { ManagerDashboard } from './features/manager/ManagerDashboard'
 import { WorkerDashboard } from './features/worker/WorkerDashboard'
 import { LoginPage } from './features/auth/LoginPage'
-import { clearAuthToken, getAuthToken } from './lib/auth'
+import { clearAuth, getAuthToken, getAuthUser } from './lib/auth'
 import { getCurrentMonthKey } from './lib/months'
 import './App.css'
 
@@ -25,7 +25,7 @@ function App() {
   return (
     <AuthenticatedApp
       onSignOut={() => {
-        clearAuthToken()
+        clearAuth()
         setIsAuthenticated(false)
       }}
     />
@@ -41,15 +41,23 @@ function AuthenticatedApp({ onSignOut }: { onSignOut: () => void }) {
     restoreDemo,
     clearSaveWarning,
   } = useLateTrackerData()
-  const [role, setRole] = useState<UserRole>('manager')
+  const user = getAuthUser()
+  const isManager = user?.role === 'admin' || user?.role === 'manager'
+  // Default to manager in demo/test mode (no user), otherwise use role from user
+  const defaultRole: UserRole = user ? (isManager ? 'manager' : 'worker') : 'manager'
+  const [role, setRole] = useState<UserRole>(defaultRole)
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthKey)
   const [selectedWorkerId, setSelectedWorkerId] = useState('')
   const [isImportOpen, setIsImportOpen] = useState(false)
+  const isLoading = status === 'loading'
+  
+  // For authenticated employees, we get only their data (single worker)
+  // For demo/test mode, we have multiple workers
+  const isAuthenticatedEmployee = user && !isManager && data.source === 'server'
   const activeWorkerId =
     data.workers.some((worker) => worker.id === selectedWorkerId)
       ? selectedWorkerId
       : (data.workers[0]?.id ?? '')
-  const isLoading = status === 'loading'
 
   return (
     <div className="app-shell">
@@ -99,9 +107,9 @@ function AuthenticatedApp({ onSignOut }: { onSignOut: () => void }) {
         ) : (
           <WorkerDashboard
             workers={data.workers}
-            selectedWorkerId={activeWorkerId}
+            selectedWorkerId={isAuthenticatedEmployee ? undefined : activeWorkerId}
             selectedMonth={selectedMonth}
-            onWorkerChange={setSelectedWorkerId}
+            onWorkerChange={isAuthenticatedEmployee ? undefined : setSelectedWorkerId}
             onMonthChange={setSelectedMonth}
           />
         )}

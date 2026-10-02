@@ -7,9 +7,9 @@ import type { Worker } from '../../lib/types'
 
 interface WorkerDashboardProps {
   workers: Worker[]
-  selectedWorkerId: string
+  selectedWorkerId?: string
   selectedMonth: MonthKey
-  onWorkerChange: (workerId: string) => void
+  onWorkerChange?: (workerId: string) => void
   onMonthChange: (month: MonthKey) => void
 }
 
@@ -22,6 +22,7 @@ export function WorkerDashboard({
   onWorkerChange,
   onMonthChange,
 }: WorkerDashboardProps) {
+  // Handle empty workers case
   if (workers.length === 0) {
     return (
       <div className="dashboard-stack">
@@ -48,6 +49,9 @@ export function WorkerDashboard({
   const monthsWithLateness = MONTHS.filter(
     (item) => worker.monthlyMinutes[item.key] > 0,
   ).length
+  
+  // Show worker dropdown only if there are multiple workers and a change handler is provided
+  const showWorkerDropdown = workers.length > 1 && onWorkerChange
 
   return (
     <div className="dashboard-stack">
@@ -55,24 +59,26 @@ export function WorkerDashboard({
         <div>
           <p className="eyebrow">Worker view</p>
           <h1 id="worker-title">My late records</h1>
-          <p>Review monthly totals imported by a manager. Records are read-only.</p>
+          <p>Review {showWorkerDropdown ? 'monthly totals imported by a manager' : 'your monthly totals'}. Records are read-only.</p>
         </div>
         <div className="heading-controls">
+          {showWorkerDropdown ? (
+            <label className="field field--compact">
+              <span>Worker</span>
+              <select
+                value={worker.id}
+                onChange={(event) => onWorkerChange(event.target.value)}
+              >
+                {workers.map((item) => (
+                  <option value={item.id} key={item.id}>
+                    {item.lastName}, {item.firstName}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
           <label className="field field--compact">
-            <span>Worker</span>
-            <select
-              value={worker.id}
-              onChange={(event) => onWorkerChange(event.target.value)}
-            >
-              {workers.map((item) => (
-                <option value={item.id} key={item.id}>
-                  {item.lastName}, {item.firstName}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="field field--compact">
-            <span>Month</span>
+            <span>Reporting month</span>
             <select
               value={selectedMonth}
               onChange={(event) =>

@@ -1,21 +1,10 @@
-import { setAuthToken } from './auth'
+import { setAuthToken, setAuthUser, type AuthenticatedUser } from './auth'
 
 const API_BASE = import.meta.env.VITE_API_URL ?? ''
 
 export interface LoginRequest {
   fullName: string
   pin: string
-}
-
-export interface AuthenticatedUser {
-  id: string
-  role: string
-  employee: {
-    id: string
-    employeeCode: string
-    firstName: string
-    lastName: string
-  }
 }
 
 export interface LoginResponse {
@@ -60,5 +49,6 @@ export async function login(credentials: LoginRequest): Promise<LoginResponse> {
   }
 
   setAuthToken(body.token)
+  setAuthUser(body.user)
   return body as LoginResponse
 }

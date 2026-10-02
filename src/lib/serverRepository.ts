@@ -1,9 +1,13 @@
-import { getAuthHeaders } from './auth'
+import { getAuthHeaders, getAuthUser } from './auth'
 import type {
   AttendanceRepository,
   ImportSelection,
   RepositoryOutcome,
 } from './dataSource'
+import {
+  fetchMyDashboard,
+  type EmployeeDashboardResponse,
+} from './dashboardApi'
 import {
   apiWorkerToWorker,
   executeImport,
@@ -45,10 +49,53 @@ interface DashboardEmployeeApi {
   monthlyMinutes?: Record<string, number>
 }
 
+function employeeDashboardToTrackerData(
+  dashboard: EmployeeDashboardResponse,
+): TrackerData {
+  const monthlyMinutes: Record<string, number> = {}
+  for (const m of MONTHS) {
+    monthlyMinutes[m.key] = 0
+  }
+
+  // Map the monthlyBreakdown array to our MonthlyMinutes structure
+  for (const item of dashboard.monthlyBreakdown) {
+    if (item.month >= 1 && item.month <= 12) {
+      const monthKey = MONTHS[item.month - 1]?.key
+      if (monthKey) {
+        monthlyMinutes[monthKey] = item.minutesLate
+      }
+    }
+  }
+
+  const worker: Worker = {
+    id: dashboard.employee.employeeCode,
+    firstName: dashboard.employee.firstName,
+    middleName: dashboard.employee.middleName,
+    lastName: dashboard.employee.lastName,
+    monthlyMinutes: monthlyMinutes as MonthlyMinutes,
+  }
+
+  return {
+    version: 1,
+    source: 'server',
+    importedAt: new Date().toISOString(),
+    workers: [worker],
+  }
+}
+
 export function createServerRepository(): AttendanceRepository {
   return {
     /** Load the latest attendance data from the server dashboard API. */
     async load(): Promise<TrackerData> {
+      const user = getAuthUser()
+      
+      // If user is an employee (not admin/manager), fetch their personal dashboard
+      if (user && user.role !== 'admin' && user.role !== 'manager') {
+        const dashboard = await fetchMyDashboard()
+        return employeeDashboardToTrackerData(dashboard)
+      }
+
+      // For managers/admins, fetch the full admin dashboard
       const year = new Date().getFullYear()
       const res = await fetch(`${API_BASE}/api/admin/dashboard?year=${year}`, {
         headers: getAuthHeaders(),
