@@ -1,11 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { clearAuthToken, setAuthToken } from './auth'
+import { clearAuthToken, clearAuthUser, setAuthToken, setAuthUser } from './auth'
 import { createServerRepository } from './serverRepository'
 
 describe('serverRepository', () => {
   beforeEach(() => {
     localStorage.clear()
     clearAuthToken()
+    clearAuthUser()
     vi.restoreAllMocks()
   })
 
@@ -16,6 +17,11 @@ describe('serverRepository', () => {
   describe('load', () => {
     it('fetches dashboard data and maps employees to Worker shape', async () => {
       setAuthToken('token-jwt')
+      setAuthUser({
+        id: 'admin-1',
+        role: 'ADMIN',
+        employee: { id: 'admin-1', employeeCode: 'EMP-1000', firstName: 'Admin', lastName: 'User' },
+      })
       const mockDashboard = {
         employees: [
           {
@@ -55,6 +61,12 @@ describe('serverRepository', () => {
     })
 
     it('throws when server request fails', async () => {
+      setAuthToken('token-jwt')
+      setAuthUser({
+        id: 'admin-1',
+        role: 'ADMIN',
+        employee: { id: 'admin-1', employeeCode: 'EMP-1000', firstName: 'Admin', lastName: 'User' },
+      })
       const fetchMock = vi.fn().mockResolvedValue({
         ok: false,
         status: 500,

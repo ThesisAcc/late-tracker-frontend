@@ -4,7 +4,6 @@ interface AppHeaderProps {
   role: "manager" | "worker";
   source: TrackerSource;
   fileName?: string;
-  onRoleChange: (role: "manager" | "worker") => void;
   onOpenImport: () => void;
   onSignOut: () => void;
 }
@@ -15,7 +14,7 @@ const badgeLabels: Record<TrackerSource, string> = {
   server: "Live data",
 };
 
-export function AppHeader({ role, source, fileName, onRoleChange, onOpenImport, onSignOut }: AppHeaderProps) {
+export function AppHeader({ role, source, fileName, onOpenImport, onSignOut }: AppHeaderProps) {
   const badgeLabel = source === "upload" ? fileName || badgeLabels.upload : badgeLabels[source];
 
   return (
@@ -36,23 +35,6 @@ export function AppHeader({ role, source, fileName, onRoleChange, onOpenImport, 
             <span className={`source-badge__dot source-badge__dot--${source}`} aria-hidden="true" />
             {badgeLabel}
           </span>
-
-          <div className="role-switch" aria-label="View as role">
-            <button
-              type="button"
-              aria-pressed={role === "manager"}
-              onClick={() => onRoleChange("manager")}
-            >
-              Manager
-            </button>
-            <button
-              type="button"
-              aria-pressed={role === "worker"}
-              onClick={() => onRoleChange("worker")}
-            >
-              Worker
-            </button>
-          </div>
 
           {role === "manager" ? (
             <button

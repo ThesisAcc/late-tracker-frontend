@@ -7,11 +7,9 @@ import { ImportDialog } from './features/import/ImportDialog'
 import { ManagerDashboard } from './features/manager/ManagerDashboard'
 import { WorkerDashboard } from './features/worker/WorkerDashboard'
 import { LoginPage } from './features/auth/LoginPage'
-import { clearAuth, getAuthToken, getAuthUser } from './lib/auth'
+import { clearAuth, getAuthToken, getAuthUser, isManagerUser } from './lib/auth'
 import { getCurrentMonthKey } from './lib/months'
 import './App.css'
-
-type UserRole = 'manager' | 'worker'
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(
@@ -42,10 +40,9 @@ function AuthenticatedApp({ onSignOut }: { onSignOut: () => void }) {
     clearSaveWarning,
   } = useLateTrackerData()
   const user = getAuthUser()
-  const isManager = user?.role === 'admin' || user?.role === 'manager'
-  // Default to manager in demo/test mode (no user), otherwise use role from user
-  const defaultRole: UserRole = user ? (isManager ? 'manager' : 'worker') : 'manager'
-  const [role, setRole] = useState<UserRole>(defaultRole)
+  // Default to manager in demo/test mode (no user), otherwise derive from the
+  // authenticated user's role. Falls back to 'worker' for unrecognised roles.
+  const role = user ? (isManagerUser(user) ? 'manager' : 'worker') : 'manager'
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthKey)
   const [selectedWorkerId, setSelectedWorkerId] = useState('')
   const [isImportOpen, setIsImportOpen] = useState(false)
@@ -53,7 +50,7 @@ function AuthenticatedApp({ onSignOut }: { onSignOut: () => void }) {
   
   // For authenticated employees, we get only their data (single worker)
   // For demo/test mode, we have multiple workers
-  const isAuthenticatedEmployee = user && !isManager && data.source === 'server'
+  const isAuthenticatedEmployee = user && role === 'worker' && data.source === 'server'
   const activeWorkerId =
     data.workers.some((worker) => worker.id === selectedWorkerId)
       ? selectedWorkerId
@@ -65,7 +62,6 @@ function AuthenticatedApp({ onSignOut }: { onSignOut: () => void }) {
         role={role}
         source={data.source}
         fileName={data.fileName}
-        onRoleChange={setRole}
         onOpenImport={() => setIsImportOpen(true)}
         onSignOut={onSignOut}
       />

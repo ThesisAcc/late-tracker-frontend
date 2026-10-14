@@ -1,4 +1,4 @@
-import { getAuthHeaders, getAuthUser } from './auth'
+import { getAuthHeaders, getAuthUser, isManagerUser } from './auth'
 import type {
   AttendanceRepository,
   ImportSelection,
@@ -90,7 +90,7 @@ export function createServerRepository(): AttendanceRepository {
       const user = getAuthUser()
       
       // If user is an employee (not admin/manager), fetch their personal dashboard
-      if (user && user.role !== 'admin' && user.role !== 'manager') {
+      if (!isManagerUser(user)) {
         const dashboard = await fetchMyDashboard()
         return employeeDashboardToTrackerData(dashboard)
       }

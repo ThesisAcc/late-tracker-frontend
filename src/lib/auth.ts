@@ -67,6 +67,17 @@ export function clearAuth(): void {
   clearAuthUser()
 }
 
+/**
+ * Returns true when the authenticated user holds an admin or manager role.
+ * Role comparison is case-insensitive to handle both "ADMIN" (server) and
+ * legacy lowercase variants used in tests.
+ */
+export function isManagerUser(user: AuthenticatedUser | null | undefined): boolean {
+  if (!user) return false
+  const role = user.role.toUpperCase()
+  return role === 'ADMIN' || role === 'MANAGER'
+}
+
 export function getAuthHeaders(): HeadersInit {
   const token = getAuthToken()
   return token ? { Authorization: `Bearer ${token}` } : {}

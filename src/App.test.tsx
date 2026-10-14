@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it } from 'vitest'
 import App from './App'
+import { AUTH_USER_KEY } from './lib/auth'
 import { STORAGE_KEY } from './lib/storage'
 import type { TrackerData } from './lib/types'
 
@@ -19,6 +20,28 @@ function metricText(label: string, index: number) {
   }
 
   return Array.from(card.querySelectorAll('p'))[index]?.textContent
+}
+
+/**
+ * Seeds localStorage so the app treats the current session as an authenticated
+ * employee (worker role). Does NOT set a token so getActiveRepository() keeps
+ * using localStorageRepository in tests — MODE=test already bypasses the auth
+ * gate, and we only need getAuthUser() to return an employee-role object.
+ */
+function setEmployeeAuth() {
+  window.localStorage.setItem(
+    AUTH_USER_KEY,
+    JSON.stringify({
+      id: 'emp-1',
+      role: 'EMPLOYEE',
+      employee: {
+        id: 'emp-1',
+        employeeCode: 'EMP-0001',
+        firstName: 'Test',
+        lastName: 'Worker',
+      },
+    }),
+  )
 }
 
 describe('App', () => {
@@ -40,10 +63,6 @@ describe('App', () => {
     )
   }
 
-  function roleSwitch() {
-    return within(screen.getByLabelText('View as role'))
-  }
-
   function dataSourceNotice() {
     return within(screen.getByRole('region', { name: 'Data source' }))
   }
@@ -57,10 +76,9 @@ describe('App', () => {
     expect(
       screen.queryByRole('region', { name: 'Data source' }),
     ).toBeNull()
-    expect(roleSwitch().getByRole('button', { name: 'Manager' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    )
+    // Role is derived from auth, not a manual toggle — the switch no longer exists
+    expect(screen.queryByLabelText('View as role')).toBeNull()
+    expect(screen.getByRole('button', { name: 'Import Excel' })).toBeVisible()
   })
 
   it('marks the current records as demo data in the header', async () => {
@@ -69,22 +87,17 @@ describe('App', () => {
     expect(screen.getByText('Demo data')).toBeInTheDocument()
   })
 
-  it('switches to the worker view and back', async () => {
-    const user = userEvent.setup()
+  it('routes an authenticated employee to the worker view', async () => {
+    setEmployeeAuth()
     await renderApp()
 
-    await user.click(roleSwitch().getByRole('button', { name: 'Worker' }))
-
-    expect(roleSwitch().getByRole('button', { name: 'Worker' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    )
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'My late records' }),
+    ).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Import Excel' })).toBeNull()
-
-    await user.click(roleSwitch().getByRole('button', { name: 'Manager' }))
-
-    expect(screen.getByRole('button', { name: 'Import Excel' })).toBeVisible()
+    expect(screen.queryByLabelText('View as role')).toBeNull()
   })
+
 
   it('lists demo workers in the manager table', async () => {
     await renderApp()
@@ -259,10 +272,8 @@ describe('App', () => {
   })
 
   it('leaves the worker view without a detail dialog', async () => {
-    const user = userEvent.setup()
+    setEmployeeAuth()
     await renderApp()
-
-    await user.click(roleSwitch().getByRole('button', { name: 'Worker' }))
 
     expect(screen.queryByRole('dialog')).toBeNull()
     expect(
@@ -366,10 +377,8 @@ describe('App', () => {
     })
 
     it('keeps the page heading on the worker view too', async () => {
-      const user = userEvent.setup()
+      setEmployeeAuth()
       await renderApp()
-
-      await user.click(roleSwitch().getByRole('button', { name: 'Worker' }))
 
       expect(
         screen.getByRole('heading', { level: 1, name: 'My late records' }),

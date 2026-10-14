@@ -160,31 +160,6 @@
   background: var(--color-brand);
 }
 
-.role-switch {
-  display: inline-flex;
-  padding: 3px;
-  border: 1px solid #d5e0e5;
-  border-radius: 10px;
-  background: #edf2f4;
-}
-
-.role-switch button {
-  min-height: 34px;
-  padding: 6px 13px;
-  border: 0;
-  border-radius: 7px;
-  color: #5b6e79;
-  background: transparent;
-  font-size: 13px;
-  font-weight: 750;
-}
-
-.role-switch button[aria-pressed="true"] {
-  color: var(--color-brand-strong);
-  background: #ffffff;
-  box-shadow: 0 1px 3px rgba(18, 48, 61, 0.14);
-}
-
 .button,
 .icon-button,
 .text-button {
@@ -218,7 +193,6 @@
 .button:focus-visible,
 .icon-button:focus-visible,
 .text-button:focus-visible,
-.role-switch button:focus-visible,
 .month-chart__hit:focus-visible,
 select:focus-visible,
 input:focus-visible {
@@ -1391,10 +1365,6 @@ input:focus-visible {
   .app-header__actions {
     display: grid;
     grid-template-columns: 1fr auto;
-  }
-
-  .role-switch button {
-    padding-inline: 10px;
   }
 
   .header-import {
