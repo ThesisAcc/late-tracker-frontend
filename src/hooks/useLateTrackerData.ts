@@ -63,6 +63,16 @@ export function useLateTrackerData() {
 
   const clearSaveWarning = useCallback(() => setSaveWarning(null), [])
 
+  const reload = useCallback(async () => {
+    setStatus('loading')
+    try {
+      const loaded = await repository.load()
+      setData(loaded)
+    } finally {
+      setStatus('ready')
+    }
+  }, [repository])
+
   return {
     data,
     status,
@@ -70,5 +80,6 @@ export function useLateTrackerData() {
     importWorkbook,
     restoreDemo,
     clearSaveWarning,
+    reload,
   }
 }

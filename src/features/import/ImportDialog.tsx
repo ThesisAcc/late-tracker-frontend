@@ -269,8 +269,17 @@ export function ImportDialog({ onClose, onImport, year: initialYear }: ImportDia
     }
   }
 
-  function handleDownload() {
-    downloadTemplate()
+  async function handleDownload() {
+    setError(null)
+    try {
+      await downloadTemplate()
+    } catch (caughtError) {
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : 'Failed to download template.',
+      )
+    }
   }
 
   async function handleConfirm() {
@@ -353,7 +362,7 @@ export function ImportDialog({ onClose, onImport, year: initialYear }: ImportDia
             <button
               type="button"
               className="button button--secondary"
-              onClick={handleDownload}
+              onClick={() => void handleDownload()}
             >
               Download template
             </button>

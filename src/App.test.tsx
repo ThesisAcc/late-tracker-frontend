@@ -356,7 +356,10 @@ describe('App', () => {
     const user = userEvent.setup()
     await renderApp()
 
-    const manageBtn = screen.getByRole('button', { name: 'Manage Employees' })
+    const actionsBtn = screen.getByRole('button', { name: /actions/i })
+    await user.click(actionsBtn)
+
+    const manageBtn = screen.getByRole('menuitem', { name: 'Manage Employees' })
     await user.click(manageBtn)
 
     expect(

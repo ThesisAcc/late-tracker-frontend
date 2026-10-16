@@ -64,7 +64,7 @@ export function LoginPage({ onAuthenticated }: LoginPageProps) {
               autoComplete="name"
               value={fullName}
               onChange={(event) => setFullName(event.target.value)}
-              placeholder="John Mark Almiro"
+              placeholder="Juan Dela Cruz"
               disabled={isSubmitting}
             />
           </label>

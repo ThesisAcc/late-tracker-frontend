@@ -178,12 +178,42 @@ describe('importsApi', () => {
   })
 
   describe('downloadTemplate', () => {
-    it('opens template endpoint in new tab', () => {
-      const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
-      downloadTemplate()
-      expect(openSpy).toHaveBeenCalledTimes(1)
-      expect(openSpy.mock.calls[0][0]).toContain('/api/admin/imports/template')
-      expect(openSpy.mock.calls[0][1]).toBe('_blank')
+    it('fetches template with auth headers and triggers blob download', async () => {
+      setAuthToken('token-admin')
+      const createObjectURLMock = vi.fn().mockReturnValue('blob:http://localhost/mock-blob')
+      const revokeObjectURLMock = vi.fn()
+      window.URL.createObjectURL = createObjectURLMock
+      window.URL.revokeObjectURL = revokeObjectURLMock
+
+      const clickMock = vi.fn()
+      const originalCreateElement = document.createElement.bind(document)
+      vi.spyOn(document, 'createElement').mockImplementation((tagName: string) => {
+        const el = originalCreateElement(tagName)
+        if (tagName === 'a') {
+          el.click = clickMock
+        }
+        return el
+      })
+
+      const mockBlob = new Blob(['sample-data'])
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        headers: new Headers({
+          'content-disposition': 'attachment; filename="custom_template.xlsx"',
+        }),
+        blob: async () => mockBlob,
+      })
+      vi.stubGlobal('fetch', fetchMock)
+
+      await downloadTemplate()
+
+      expect(fetchMock).toHaveBeenCalledTimes(1)
+      const [url, options] = fetchMock.mock.calls[0]
+      expect(url).toContain('/api/admin/imports/template')
+      expect(options.headers).toEqual({ Authorization: 'Bearer token-admin' })
+      expect(createObjectURLMock).toHaveBeenCalledWith(mockBlob)
+      expect(clickMock).toHaveBeenCalledTimes(1)
+      expect(revokeObjectURLMock).toHaveBeenCalledWith('blob:http://localhost/mock-blob')
     })
   })
 

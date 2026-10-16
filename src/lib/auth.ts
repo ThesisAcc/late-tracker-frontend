@@ -78,6 +78,14 @@ export function isManagerUser(user: AuthenticatedUser | null | undefined): boole
   return role === 'ADMIN' || role === 'MANAGER'
 }
 
+/**
+ * Returns true when the authenticated user holds an ADMIN role.
+ */
+export function isAdminUser(user: AuthenticatedUser | null | undefined): boolean {
+  if (!user) return false
+  return user.role.toUpperCase() === 'ADMIN'
+}
+
 export function getAuthHeaders(): HeadersInit {
   const token = getAuthToken()
   return token ? { Authorization: `Bearer ${token}` } : {}

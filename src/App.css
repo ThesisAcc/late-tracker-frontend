@@ -916,7 +916,8 @@ input:focus-visible {
 
 .import-dialog::backdrop,
 .worker-dialog::backdrop,
-.employees-dialog::backdrop {
+.employees-dialog::backdrop,
+.reset-dialog::backdrop {
   background: rgba(19, 39, 49, 0.58);
   backdrop-filter: blur(3px);
 }
@@ -1270,6 +1271,185 @@ input:focus-visible {
   border: 0;
 }
 
+/* Header actions dropdown */
+.header-actions-dropdown {
+  position: relative;
+  display: inline-flex;
+}
+
+.header-actions-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.header-actions-chevron {
+  font-size: 11px;
+  line-height: 1;
+  color: #5b6d78;
+  margin-left: 2px;
+}
+
+.header-actions-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 190px;
+  background: #ffffff;
+  border: 1px solid #d9e2e7;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(17, 43, 55, 0.12);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 100;
+}
+
+.actions-menu-item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 9px 12px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #172b3a;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.actions-menu-item:hover,
+.actions-menu-item:focus-visible {
+  background: #f0f4f7;
+  color: #0b1924;
+  outline: none;
+}
+
+.actions-menu-item--danger {
+  color: #c93530;
+}
+
+.actions-menu-item--danger:hover,
+.actions-menu-item--danger:focus-visible {
+  background: #fdf2f2;
+  color: #9f2420;
+}
+
+.actions-menu-item--signout {
+  color: #5b6d78;
+}
+
+.actions-menu-item--signout:hover,
+.actions-menu-item--signout:focus-visible {
+  background: #f0f4f7;
+  color: #172b3a;
+}
+
+.actions-menu-divider {
+  height: 1px;
+  background: #e5ecef;
+  margin: 4px 0;
+}
+
+/* Reset dialog */
+.reset-dialog {
+  width: min(640px, calc(100% - 28px));
+  max-height: calc(100dvh - 28px);
+  margin: auto;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 15px;
+  background: transparent;
+  box-shadow: 0 24px 80px rgba(17, 43, 55, 0.28);
+}
+
+.reset-dialog__surface {
+  max-height: calc(100dvh - 28px);
+  padding: 24px;
+  overflow-y: auto;
+  background: #ffffff;
+}
+
+.eyebrow--danger {
+  color: #d33833;
+  font-weight: 600;
+}
+
+.reset-warning {
+  border-color: #f7c9b8;
+  background: #fdf3ef;
+  color: #7b2715;
+}
+
+.reset-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.reset-summary-card {
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  background: #f8fafb;
+  border: 1px solid #d9e2e7;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.reset-summary-card__value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #172b3a;
+}
+
+.reset-summary-card__label {
+  font-size: 11px;
+  color: #5b6d78;
+  margin-top: 2px;
+}
+
+.reset-backup-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  background: #f0f7f5;
+  border: 1px solid #c2e2d8;
+  border-radius: 10px;
+  margin: 16px 0 8px;
+}
+
+.reset-backup-box__text strong {
+  display: block;
+  color: #134638;
+  font-size: 14px;
+}
+
+.reset-backup-box__text p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #286352;
+}
+
+.reset-backup-notice {
+  font-size: 13px;
+  color: #1e7e60;
+  font-weight: 500;
+  margin: 0 0 16px;
+}
+
+.reset-confirmation-box {
+  margin: 18px 0;
+}
+
 @media (max-width: 980px) {
   .app-header__inner {
     width: min(100% - 28px, 1240px);
@@ -1343,9 +1523,28 @@ input:focus-visible {
     align-self: flex-start;
   }
 
+  .header-actions-dropdown {
+    width: 100%;
+  }
+
+  .header-actions-trigger {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .header-actions-menu {
+    position: static;
+    width: 100%;
+    box-shadow: none;
+    border-color: #d9e2e7;
+    margin-top: 4px;
+  }
+
   .header-employees,
   .header-attendance,
   .header-import,
+  .header-reset,
+  .header-change-pin,
   .app-header__actions .button--quiet {
     width: 100%;
   }

@@ -9,8 +9,9 @@ import { ManageAttendanceDialog } from './features/attendance/ManageAttendanceDi
 import { ManagerDashboard } from './features/manager/ManagerDashboard'
 import { WorkerDashboard } from './features/worker/WorkerDashboard'
 import { LoginPage } from './features/auth/LoginPage'
+import { ResetDataDialog } from './features/admin/ResetDataDialog'
 import { ChangePinDialog } from './features/auth/ChangePinDialog'
-import { clearAuth, getAuthToken, getAuthUser, isManagerUser } from './lib/auth'
+import { clearAuth, getAuthToken, getAuthUser, isAdminUser, isManagerUser } from './lib/auth'
 import { getCurrentMonthKey } from './lib/months'
 import './App.css'
 
@@ -41,16 +42,19 @@ function AuthenticatedApp({ onSignOut }: { onSignOut: () => void }) {
     importWorkbook,
     restoreDemo,
     clearSaveWarning,
+    reload,
   } = useLateTrackerData()
   const user = getAuthUser()
   // Default to manager in demo/test mode (no user), otherwise derive from the
   // authenticated user's role. Falls back to 'worker' for unrecognised roles.
   const role = user ? (isManagerUser(user) ? 'manager' : 'worker') : 'manager'
+  const isAdmin = user ? isAdminUser(user) : false
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthKey)
   const [selectedWorkerId, setSelectedWorkerId] = useState('')
   const [isImportOpen, setIsImportOpen] = useState(false)
   const [isEmployeesOpen, setIsEmployeesOpen] = useState(false)
   const [isAttendanceOpen, setIsAttendanceOpen] = useState(false)
+  const [isResetOpen, setIsResetOpen] = useState(false)
   const [isChangePinOpen, setIsChangePinOpen] = useState(false)
   const isLoading = status === 'loading'
   
@@ -66,13 +70,17 @@ function AuthenticatedApp({ onSignOut }: { onSignOut: () => void }) {
     <div className="app-shell">
       <AppHeader
         role={role}
+        isAdmin={isAdmin}
         source={data.source}
         fileName={data.fileName}
         onOpenImport={() => setIsImportOpen(true)}
         onOpenEmployees={() => setIsEmployeesOpen(true)}
         onOpenAttendance={() => setIsAttendanceOpen(true)}
+        onOpenReset={() => setIsResetOpen(true)}
         onChangePin={
-          role === 'worker' ? () => setIsChangePinOpen(true) : undefined
+          role === 'worker' || isAdmin
+            ? () => setIsChangePinOpen(true)
+            : undefined
         }
         onSignOut={onSignOut}
       />
@@ -152,6 +160,15 @@ function AuthenticatedApp({ onSignOut }: { onSignOut: () => void }) {
 
       {isChangePinOpen ? (
         <ChangePinDialog onClose={() => setIsChangePinOpen(false)} />
+      ) : null}
+
+      {isResetOpen ? (
+        <ResetDataDialog
+          onClose={() => setIsResetOpen(false)}
+          onResetComplete={async () => {
+            await reload()
+          }}
+        />
       ) : null}
     </div>
   )

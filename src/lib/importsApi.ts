@@ -172,8 +172,28 @@ export async function executeImport(
 /**
  * Download the blank .xlsx template (opens a browser download).
  */
-export function downloadTemplate(): void {
-  window.open(`${API_BASE}/api/admin/imports/template`, '_blank')
+export async function downloadTemplate(): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/admin/imports/template`, {
+    headers: getAuthHeaders(),
+  })
+  await throwIfError(res)
+  const blob = await res.blob()
+  let filename = 'late_tracker_template.xlsx'
+  const disposition = res.headers.get('content-disposition')
+  if (disposition) {
+    const match = /filename\*?=['"]?(?:UTF-\d['"]*)?([^;\r\n"']*)['"]?/i.exec(disposition)
+    if (match?.[1]) {
+      filename = decodeURIComponent(match[1].trim())
+    }
+  }
+  const url = window.URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  window.URL.revokeObjectURL(url)
 }
 
 export interface ImportHistoryItem {

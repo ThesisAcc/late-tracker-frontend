@@ -39,4 +39,18 @@ describe('auth helper module', () => {
       Authorization: `Bearer ${'jwt-secret-xyz'}`,
     })
   })
+
+  it('correctly checks manager and admin user roles', async () => {
+    const { isAdminUser, isManagerUser } = await import('./auth')
+    expect(isAdminUser(null)).toBe(false)
+    expect(isAdminUser({ id: '1', role: 'EMPLOYEE', employee: { id: 'e1', employeeCode: '1', firstName: 'A', lastName: 'B' } })).toBe(false)
+    expect(isAdminUser({ id: '1', role: 'MANAGER', employee: { id: 'e1', employeeCode: '1', firstName: 'A', lastName: 'B' } })).toBe(false)
+    expect(isAdminUser({ id: '1', role: 'ADMIN', employee: { id: 'e1', employeeCode: '1', firstName: 'A', lastName: 'B' } })).toBe(true)
+    expect(isAdminUser({ id: '1', role: 'admin', employee: { id: 'e1', employeeCode: '1', firstName: 'A', lastName: 'B' } })).toBe(true)
+
+    expect(isManagerUser(null)).toBe(false)
+    expect(isManagerUser({ id: '1', role: 'EMPLOYEE', employee: { id: 'e1', employeeCode: '1', firstName: 'A', lastName: 'B' } })).toBe(false)
+    expect(isManagerUser({ id: '1', role: 'MANAGER', employee: { id: 'e1', employeeCode: '1', firstName: 'A', lastName: 'B' } })).toBe(true)
+    expect(isManagerUser({ id: '1', role: 'ADMIN', employee: { id: 'e1', employeeCode: '1', firstName: 'A', lastName: 'B' } })).toBe(true)
+  })
 })
