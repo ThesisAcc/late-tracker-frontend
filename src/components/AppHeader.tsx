@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { TrackerSource } from "../lib/types";
 
 interface AppHeaderProps {
@@ -6,6 +7,8 @@ interface AppHeaderProps {
   fileName?: string;
   onOpenImport: () => void;
   onOpenEmployees?: () => void;
+  onOpenAttendance?: () => void;
+  onChangePin?: () => void;
   onSignOut: () => void;
 }
 
@@ -21,9 +24,12 @@ export function AppHeader({
   fileName,
   onOpenImport,
   onOpenEmployees,
+  onOpenAttendance,
+  onChangePin,
   onSignOut,
 }: AppHeaderProps) {
   const badgeLabel = source === "upload" ? fileName || badgeLabels.upload : badgeLabels[source];
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
     <header className="app-header">
@@ -38,7 +44,17 @@ export function AppHeader({
           </span>
         </div>
 
-        <div className="app-header__actions">
+        <button
+          type="button"
+          className="hamburger-button"
+          aria-label="Toggle menu"
+          aria-expanded={isMenuOpen}
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+        >
+          <span aria-hidden="true">{isMenuOpen ? "×" : "☰"}</span>
+        </button>
+
+        <div className={`app-header__actions ${isMenuOpen ? "app-header__actions--open" : ""}`}>
           <span className="source-badge">
             <span className={`source-badge__dot source-badge__dot--${source}`} aria-hidden="true" />
             {badgeLabel}
@@ -55,6 +71,15 @@ export function AppHeader({
                   Manage Employees
                 </button>
               ) : null}
+              {onOpenAttendance ? (
+                <button
+                  type="button"
+                  className="button button--secondary header-attendance"
+                  onClick={onOpenAttendance}
+                >
+                  Manual Attendance
+                </button>
+              ) : null}
               <button
                 type="button"
                 className="button button--primary header-import"
@@ -63,6 +88,14 @@ export function AppHeader({
                 Import Excel
               </button>
             </>
+          ) : onChangePin ? (
+            <button
+              type="button"
+              className="button button--secondary header-change-pin"
+              onClick={onChangePin}
+            >
+              Change PIN
+            </button>
           ) : null}
           <button type="button" className="button button--quiet" onClick={onSignOut}>
             Sign out

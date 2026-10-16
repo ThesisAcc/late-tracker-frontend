@@ -1,4 +1,9 @@
-import { setAuthToken, setAuthUser, type AuthenticatedUser } from './auth'
+import {
+  getAuthHeaders,
+  setAuthToken,
+  setAuthUser,
+  type AuthenticatedUser,
+} from './auth'
 
 const API_BASE = import.meta.env.VITE_API_URL ?? ''
 
@@ -10,6 +15,15 @@ export interface LoginRequest {
 export interface LoginResponse {
   token: string
   user: AuthenticatedUser
+}
+
+export interface ChangePasswordRequest {
+  currentPin: string
+  newPin: string
+}
+
+export interface ChangePasswordResponse {
+  message: string
 }
 
 export class LoginError extends Error {
@@ -51,4 +65,30 @@ export async function login(credentials: LoginRequest): Promise<LoginResponse> {
   setAuthToken(body.token)
   setAuthUser(body.user)
   return body as LoginResponse
+}
+
+export async function changePassword(
+  input: ChangePasswordRequest,
+): Promise<ChangePasswordResponse> {
+  const response = await fetch(`${API_BASE}/api/auth/change-password`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeaders(),
+    },
+    body: JSON.stringify(input),
+  })
+
+  let body: Partial<ChangePasswordResponse> & { message?: string } = {}
+  try {
+    body = await response.json()
+  } catch {
+    // Preserve the HTTP status when a server returns no JSON body.
+  }
+
+  if (!response.ok) {
+    throw new LoginError(body.message || 'Failed to change PIN', response.status)
+  }
+
+  return body as ChangePasswordResponse
 }
