@@ -4,6 +4,7 @@ import { DataSourceNotice } from './components/DataSourceNotice'
 import { LoadingState } from './components/LoadingState'
 import { useLateTrackerData } from './hooks/useLateTrackerData'
 import { ImportDialog } from './features/import/ImportDialog'
+import { ManageEmployeesDialog } from './features/employees/ManageEmployeesDialog'
 import { ManagerDashboard } from './features/manager/ManagerDashboard'
 import { WorkerDashboard } from './features/worker/WorkerDashboard'
 import { LoginPage } from './features/auth/LoginPage'
@@ -46,6 +47,7 @@ function AuthenticatedApp({ onSignOut }: { onSignOut: () => void }) {
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonthKey)
   const [selectedWorkerId, setSelectedWorkerId] = useState('')
   const [isImportOpen, setIsImportOpen] = useState(false)
+  const [isEmployeesOpen, setIsEmployeesOpen] = useState(false)
   const isLoading = status === 'loading'
   
   // For authenticated employees, we get only their data (single worker)
@@ -63,6 +65,7 @@ function AuthenticatedApp({ onSignOut }: { onSignOut: () => void }) {
         source={data.source}
         fileName={data.fileName}
         onOpenImport={() => setIsImportOpen(true)}
+        onOpenEmployees={() => setIsEmployeesOpen(true)}
         onSignOut={onSignOut}
       />
 
@@ -125,6 +128,12 @@ function AuthenticatedApp({ onSignOut }: { onSignOut: () => void }) {
             setIsImportOpen(false)
           }}
       />
+      ) : null}
+
+      {isEmployeesOpen ? (
+        <ManageEmployeesDialog
+          onClose={() => setIsEmployeesOpen(false)}
+        />
       ) : null}
     </div>
   )

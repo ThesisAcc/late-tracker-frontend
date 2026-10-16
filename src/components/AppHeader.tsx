@@ -5,6 +5,7 @@ interface AppHeaderProps {
   source: TrackerSource;
   fileName?: string;
   onOpenImport: () => void;
+  onOpenEmployees?: () => void;
   onSignOut: () => void;
 }
 
@@ -14,7 +15,14 @@ const badgeLabels: Record<TrackerSource, string> = {
   server: "Live data",
 };
 
-export function AppHeader({ role, source, fileName, onOpenImport, onSignOut }: AppHeaderProps) {
+export function AppHeader({
+  role,
+  source,
+  fileName,
+  onOpenImport,
+  onOpenEmployees,
+  onSignOut,
+}: AppHeaderProps) {
   const badgeLabel = source === "upload" ? fileName || badgeLabels.upload : badgeLabels[source];
 
   return (
@@ -37,13 +45,24 @@ export function AppHeader({ role, source, fileName, onOpenImport, onSignOut }: A
           </span>
 
           {role === "manager" ? (
-            <button
-              type="button"
-              className="button button--primary header-import"
-              onClick={onOpenImport}
-            >
-              Import Excel
-            </button>
+            <>
+              {onOpenEmployees ? (
+                <button
+                  type="button"
+                  className="button button--secondary header-employees"
+                  onClick={onOpenEmployees}
+                >
+                  Manage Employees
+                </button>
+              ) : null}
+              <button
+                type="button"
+                className="button button--primary header-import"
+                onClick={onOpenImport}
+              >
+                Import Excel
+              </button>
+            </>
           ) : null}
           <button type="button" className="button button--quiet" onClick={onSignOut}>
             Sign out

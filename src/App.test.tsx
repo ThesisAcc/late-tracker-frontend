@@ -352,6 +352,27 @@ describe('App', () => {
     expect(metricText('Sep team total', 1)).toBe('250 min')
   })
 
+  it('opens and closes the manage employees dialog from the header', async () => {
+    const user = userEvent.setup()
+    await renderApp()
+
+    const manageBtn = screen.getByRole('button', { name: 'Manage Employees' })
+    await user.click(manageBtn)
+
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Manage Employees' }),
+    ).toBeInTheDocument()
+
+    const closeBtn = screen.getByRole('button', { name: 'Close dialog' })
+    await user.click(closeBtn)
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('heading', { level: 2, name: 'Manage Employees' }),
+      ).toBeNull()
+    })
+  })
+
   describe('with an empty imported dataset', () => {
     beforeEach(() => {
       window.localStorage.setItem(

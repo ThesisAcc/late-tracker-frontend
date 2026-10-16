@@ -895,10 +895,128 @@ input:focus-visible {
 }
 
 .import-dialog::backdrop,
-.worker-dialog::backdrop {
+.worker-dialog::backdrop,
+.employees-dialog::backdrop {
   background: rgba(19, 39, 49, 0.58);
   backdrop-filter: blur(3px);
 }
+
+.employees-dialog {
+  width: min(860px, calc(100% - 28px));
+  max-height: calc(100dvh - 28px);
+  margin: auto;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 15px;
+  background: transparent;
+  box-shadow: 0 24px 80px rgba(17, 43, 55, 0.28);
+}
+
+.employees-dialog__surface {
+  max-height: calc(100dvh - 28px);
+  padding: 24px;
+  overflow-y: auto;
+  background: #ffffff;
+}
+
+.employees-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.employees-toolbar .search-input {
+  flex: 1;
+  max-width: 380px;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid #cbd8de;
+  border-radius: 9px;
+  font-size: 13px;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.status-badge--active {
+  color: #0d6832;
+  background: #e6f6ec;
+}
+
+.status-badge--inactive {
+  color: #72808a;
+  background: #edf1f3;
+}
+
+.button--small {
+  min-height: 30px;
+  padding: 3px 10px;
+  font-size: 12px;
+}
+
+.button--danger {
+  color: #ffffff;
+  background: #d33833;
+  border-color: #d33833;
+}
+
+.button--danger:not(:disabled):hover {
+  background: #b52723;
+  border-color: #b52723;
+}
+
+.button--danger-text {
+  color: #c93530;
+}
+
+.button--danger-text:hover {
+  color: #9f2420;
+  background: #fdf2f2;
+}
+
+.employee-form {
+  margin-top: 18px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #304956;
+}
+
+.form-field input,
+.form-field select {
+  min-height: 42px;
+  padding: 8px 12px;
+  border: 1px solid #cbd8de;
+  border-radius: 8px;
+  font-size: 13px;
+  background: #ffffff;
+}
+
+.employee-confirm-view {
+  margin-top: 18px;
+}
+
 
 .import-dialog__surface {
   max-height: calc(100dvh - 28px);
